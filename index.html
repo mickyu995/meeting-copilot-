@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0f1115">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <title>Meeting Copilot</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">Meeting Copilot</div>
+    <div id="status" class="chip">Idle</div>
+  </header>
+
+  <div id="banner" class="banner" hidden></div>
+
+  <main>
+    <!-- LIVE -->
+    <section id="tab-live" class="tab active">
+      <div class="card answer">
+        <div class="label">SAY THIS</div>
+        <div id="answerText" class="answerText placeholder">Press <b>Start listening</b>. When the other person asks something, your answer appears here.</div>
+        <div id="nextWrap" hidden>
+          <div class="label" style="margin-top:14px">ASK NEXT</div>
+          <ul id="nextList" class="nextList"></ul>
+        </div>
+        <div class="row" style="margin-top:12px">
+          <button id="btnRewrite" class="ghost small" type="button">Write again</button>
+          <button id="btnCopy" class="ghost small" type="button">Copy</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row between">
+          <div class="label">TRANSCRIPT</div>
+          <div class="seg" id="whoSeg" role="group" aria-label="Who is speaking">
+            <button type="button" data-who="them" class="on">Them</button>
+            <button type="button" data-who="me">Me</button>
+          </div>
+        </div>
+        <div id="transcript" class="transcript"></div>
+        <div id="interim" class="interim"></div>
+        <div class="hint">Set <b>Me</b> before you speak so your own words never trigger an answer. Tap any line to switch it between Them and Me.</div>
+      </div>
+
+      <div class="askrow">
+        <input id="askInput" type="text" placeholder="Ask anything mid-call..." enterkeyhint="send" autocomplete="off">
+        <button id="btnAsk" class="ghost" type="button">Ask</button>
+      </div>
+
+      <details class="card tips">
+        <summary>When does this work?</summary>
+        <p>The phone's microphone must hear the other person. It works well for <b>in-person meetings</b>, and for a call that plays on <b>another device</b> (laptop, tablet) placed near the phone. If the call is on this same phone, Android often gives the microphone to the call app and this page may hear nothing.</p>
+        <p>Keep the screen on and this page open. Chrome on Android gives the best result.</p>
+      </details>
+    </section>
+
+    <!-- BRIEF -->
+    <section id="tab-brief" class="tab">
+      <div class="card">
+        <div class="label">MEETING BRIEF</div>
+        <label>Meeting name<input id="b_title" type="text" placeholder="Website rebuild call with Acme"></label>
+        <label>Who you are meeting<input id="b_otherSide" type="text" placeholder="Owner of a small online shop"></label>
+        <label>Your role<input id="b_role" type="text" placeholder="Freelance web developer"></label>
+        <label>A good outcome<input id="b_goal" type="text" placeholder="They agree to a paid trial"></label>
+        <label>Prepared material
+          <textarea id="b_background" rows="9" placeholder="Your pitch, prices, past results, your lines.&#10;&#10;1. PRICING&#10;&#9654; SAY&#10;&quot;The rebuild is 1,200, and SEO after that is 300 a month.&quot;&#10;NOTE - DON'T SAY&#10;My floor is 1,000. Only offer it if they push twice."></textarea>
+        </label>
+        <label>Names and jargon (comma separated)<input id="b_terms" type="text" placeholder="Shopify, idempotency, Acme"></label>
+        <div class="hint">Lines marked <b>NOTE - DON'T SAY</b> guide the answers but are never written as words to say.</div>
+      </div>
+
+      <div class="card">
+        <div class="label">ASK THE AI WHAT ELSE IT NEEDS</div>
+        <div class="hint" style="margin:0 0 10px">It asks the few questions whose answers make the live answers better.</div>
+        <button id="btnClarify" class="ghost" type="button">Ask me questions</button>
+        <div id="clarifyBox"></div>
+      </div>
+    </section>
+
+    <!-- NOTES -->
+    <section id="tab-notes" class="tab">
+      <div class="card">
+        <div class="row between">
+          <div class="label">THIS MEETING</div>
+          <button id="btnNew" class="ghost small" type="button">New meeting</button>
+        </div>
+        <div id="meetingMeta" class="hint" style="margin-top:6px"></div>
+        <label>Your notes<textarea id="n_notes" rows="4" placeholder="Anything you want to remember"></textarea></label>
+        <button id="btnSummary" class="primary" type="button">Generate summary</button>
+        <div id="summaryBox"></div>
+        <div class="row" style="margin-top:12px">
+          <button id="btnShare" class="ghost small" type="button">Share</button>
+          <button id="btnDownload" class="ghost small" type="button">Download .txt</button>
+          <button id="btnCopyAll" class="ghost small" type="button">Copy all</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="label">PAST MEETINGS</div>
+        <div id="history"></div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="tab-settings" class="tab">
+      <div class="card">
+        <div class="label">GEMINI</div>
+        <label>API key
+          <div class="row">
+            <input id="s_key" type="password" placeholder="Paste your Gemini API key" autocomplete="off" autocapitalize="off" spellcheck="false" style="flex:1">
+            <button id="btnShowKey" class="ghost small" type="button">Show</button>
+          </div>
+        </label>
+        <div class="hint">Get a free key at aistudio.google.com. It is saved only on this phone.</div>
+        <label>Model
+          <input id="s_model" type="text" list="modelList" autocapitalize="off" spellcheck="false">
+          <datalist id="modelList"></datalist>
+        </label>
+        <button id="btnTest" class="ghost" type="button">Test key</button>
+        <div id="testResult" class="hint"></div>
+      </div>
+
+      <div class="card">
+        <div class="label">LISTENING AND ANSWERS</div>
+        <label>Language they speak
+          <select id="s_speechLang">
+            <option value="en-US">English (US)</option>
+            <option value="en-GB">English (UK)</option>
+            <option value="en-IN">English (India)</option>
+            <option value="en-PK">English (Pakistan)</option>
+            <option value="ur-PK">Urdu</option>
+            <option value="hi-IN">Hindi</option>
+            <option value="ar-SA">Arabic</option>
+            <option value="es-ES">Spanish</option>
+            <option value="fr-FR">French</option>
+            <option value="de-DE">German</option>
+          </select>
+        </label>
+        <label>Language of the answers
+          <select id="s_answerLang">
+            <option value="english">English</option>
+            <option value="roman">Roman Urdu</option>
+            <option value="urdu">Urdu (script)</option>
+            <option value="hindi">Hindi</option>
+            <option value="same">Same as the other person</option>
+          </select>
+        </label>
+        <label>Longest answer (words)
+          <input id="s_maxWords" type="number" min="20" max="150" step="5">
+        </label>
+        <label class="check"><input id="s_auto" type="checkbox"> Answer questions automatically</label>
+        <label class="check"><input id="s_wake" type="checkbox"> Keep the screen on while listening</label>
+      </div>
+
+      <div class="card">
+        <div class="label">PRIVACY</div>
+        <p class="hint" style="margin:0">Briefs, transcripts and notes stay on this phone. While you listen, Chrome sends the microphone audio to Google's speech service, and each answer sends your brief and the recent conversation to Gemini with your key. On a free Gemini key, Google may use that content to improve its products, so use a paid key for sensitive meetings.</p>
+        <p class="hint">Use it responsibly. In many places you must tell people before you transcribe a call, and some workplaces, schools and exams do not allow assistants like this.</p>
+        <button id="btnWipe" class="ghost danger" type="button">Delete all data on this phone</button>
+      </div>
+    </section>
+  </main>
+
+  <div class="dock" id="dock">
+    <button id="btnListen" class="primary" type="button">Start listening</button>
+    <button id="btnNow" class="ghost" type="button">Answer now</button>
+  </div>
+
+  <nav class="nav">
+    <button type="button" data-tab="live" class="on">Live</button>
+    <button type="button" data-tab="brief">Brief</button>
+    <button type="button" data-tab="notes">Notes</button>
+    <button type="button" data-tab="settings">Settings</button>
+  </nav>
+
+  <script src="logic.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
